@@ -180,11 +180,11 @@ Function UpdateEvent_Cores(e.Events)
 	
 ;! ~ Plot events
 	
-	If (Not clm\GlobalMode) Then
-		
-		Select gc\CurrZone
-			Case EZ
-				If PlayerRoom = e\room Then
+	If PlayerRoom = e\room Then
+		If (Not clm\GlobalMode) Then
+			
+			Select gc\CurrZone
+				Case EZ
 					
 					If e\EventState[7] > 70*5 Then
 						EntityTexture e\room\Objects[9], Checkpoint_Screen[0], Floor(((e\EventState[7]-70*5)/70) Mod 4.0)
@@ -196,236 +196,102 @@ Function UpdateEvent_Cores(e.Events)
 						e\EventState[7] = e\EventState[7] + fps\Factor[0]
 					EndIf
 					
-				EndIf
-				
-				If (Not ecst\WasInHCZ) Then
-					If EntityDistanceSquared(e\room\Objects[3], Collider) < PowTwo(1.0) Then
-						If (Not TaskExists(TASK_FIND_ROOM3_CT) Lor TaskExists(TASK_FIND_ROOM3_CT_FUSEBOXES)) Then
-							If (Not TaskExists(TASK_FINDWAY_EZDOOR)) And (Not mtfd\IsPlaying) Then
-								If (Not TaskExists(TASK_LAUNCH_ROCKET)) Then
-									PlayNewDialogue(6,%01)
-									BeginTask(TASK_FINDWAY_EZDOOR)
-								EndIf
-							EndIf
-						Else
-							If (Not TaskExists(TASK_FINDWAY_EZDOOR_ALT)) And (Not mtfd\IsPlaying) Then
-								If (Not TaskExists(TASK_LAUNCH_ROCKET)) Then
-									BeginTask(TASK_FINDWAY_EZDOOR_ALT)
-								EndIf
-							EndIf
-						EndIf
-					EndIf
-				EndIf
-			Case HCZ
-				If (Not ecst\WasInO5) Then
-					If e\room\NPC[0] = Null Then
-						de.Decals = CreateDecal(DECAL_BLOODPOOL, EntityX(e\room\Objects[6],True), 0.002, EntityZ(e\room\Objects[6],True),90,Rnd(360),0)
-						de\Size = 0.5
-						e\room\NPC[0] = CreateNPC(NPCTypeWoundedGuard,EntityX(e\room\Objects[6],True),EntityY(e\room\Objects[6],True)+0.2,EntityZ(e\room\Objects[6],True))
-						e\room\NPC[0]\State = 0
-						RotateEntity(e\room\NPC[0]\Collider,0,e\room\angle-45,0)
-					EndIf
-					
-					If ecst\KilledGuard Then
-						CanSave = False
-						e\EventState[8] = e\EventState[8] + fps\Factor[0]
-						If e\EventState[8] > 0 And e\EventState[8] < 70*0.02 Then
-							
-							CreateSplashText(GetLocalString("Singleplayer", "killed_guard"),opt\GraphicWidth/2,opt\GraphicHeight/2,500,2,Font_Menu,True,False)
-							CreateSplashText(GetLocalString("Singleplayer", "killed_guard_2"),opt\GraphicWidth/2,opt\GraphicHeight/2+100,500,2,Font_Menu_Small,True,False)
-							
-						EndIf
-						BlinkTimer = -10
-						Kill()
-						m_msg\DeathTxt = ""
-					EndIf
-					
-					If e\room\NPC[0] <> Null Then
-						If e\room\NPC[0]\HP < 1 Then
-							ecst\KilledGuard = True
-							
-							If TaskExists(TASK_FIND_MEDKIT) Then
-								FailTask(TASK_FIND_MEDKIT)
-							EndIf
-							If TaskExists(TASK_COME_BACK_TO_CORE) Then
-								FailTask(TASK_COME_BACK_TO_CORE)
-							EndIf
-							If TaskExists(TASK_COME_BACK_TO_GUARD) Then
-								FailTask(TASK_COME_BACK_TO_GUARD)
-							EndIf
-							If TaskExists(TASK_COME_BACK_TO_GUARD_2) Then
-								FailTask(TASK_COME_BACK_TO_GUARD_2)
-							EndIf
-						EndIf
-					EndIf
-					
-					Local g.Guns
-					
-					If cpt\Current <> 4 Then
-						
-						If TaskExists(TASK_COME_BACK_TO_GUARD) Then
-							If EntityDistanceSquared(e\room\Objects[5], Collider) < PowTwo(0.3) Then
-								e\EventState[5] = e\EventState[5] + fps\Factor[0]/2
-								If e\EventState[5] <> 0.0 And e\EventState[5] < 70*8.0 Then
-									BlurTimer = 0
-									psp\NoMove = False
-									psp\NoRotation = True
-									CanPlayerUseGuns% = False
-									
-									For g.Guns = Each Guns
-										If g\ID = g_I\HoldingGun Then
-											PlayGunSound(g\name$+"\holster",1,1,False)
-										EndIf
-									Next
-									g_I\GunChangeFLAG = False
-									g_I\HoldingGun = 0
-									g_I\Weapon_CurrSlot = 0
-									mpl\SlotsDisplayTimer = 0
-									
-								EndIf
-							EndIf
-						EndIf
-						
-						If TaskExists(TASK_COME_BACK_TO_GUARD) Then
-							
-							If e\EventState[5] > 0 And e\EventState[5] < 70*0.02 Then
-								PlayNewDialogue(9,%01)
-							EndIf
-							
-							If e\EventState[5] < 70*8.0 Then
-								If EntityDistanceSquared(e\room\Objects[5], Collider) < PowTwo(0.3) Then
-									
-									pvt = CreatePivot()
-									PositionEntity(pvt,EntityX(Collider),EntityY(Collider),EntityZ(Collider))
-									
-									PointEntity pvt, e\room\Objects[6]
-									RotateEntity Collider, 0, CurveAngle(EntityYaw(pvt),EntityYaw(Collider),100.0), 0
-									
-									psp\NoMove = True
-									psp\NoRotation = True
-								EndIf
-							ElseIf e\EventState[5] >= 70*8.0 And e\EventState[5] < 70*8.1 Then
-								psp\NoMove = False
-								psp\NoRotation = False
-								CanPlayerUseGuns% = True
-								FreeEntity_Strict pvt
-								EndTask(TASK_COME_BACK_TO_GUARD)
-								BeginTask(TASK_FIND_REACTOR)
-							EndIf
-							If e\EventState[5] > 0 And e\EventState[5] < 70*8.0 Then
-								PointEntity pvt, e\room\Objects[6]
-								RotateEntity Collider, 0, CurveAngle(EntityYaw(pvt),EntityYaw(Collider),100.0), 0
-								psp\NoMove = True
-								psp\NoRotation = True
-							EndIf
-						EndIf
-						
-						If TaskExists(TASK_COME_BACK_TO_GUARD_2) Then
-							If EntityDistanceSquared(e\room\Objects[5], Collider) < PowTwo(0.3) Then
-								e\EventState[6] = e\EventState[6] + fps\Factor[0]/2
-								If e\EventState[6] <> 0.0 And e\EventState[6] < 70*5.0 Then
-									BlurTimer = 0
-									psp\NoMove = False
-									psp\NoRotation = True
-									CanPlayerUseGuns% = False
-									
-									For g.Guns = Each Guns
-										If g\ID = g_I\HoldingGun Then
-											PlayGunSound(g\name$+"\holster",1,1,False)
-										EndIf
-									Next
-									g_I\GunChangeFLAG = False
-									g_I\HoldingGun = 0
-									g_I\Weapon_CurrSlot = 0
-									mpl\SlotsDisplayTimer = 0
-									
-								EndIf
-							EndIf
-						EndIf
-						
-						If TaskExists(TASK_COME_BACK_TO_GUARD_2) Then
-							
-							If e\EventState[6] > 0 And e\EventState[6] < 70*0.01 Then
-								PlayNewDialogue(10,%01)
-							EndIf
-							
-							If e\EventState[6] < 70*5.0 Then
-								If EntityDistanceSquared(e\room\Objects[5], Collider) < PowTwo(0.3) Then
-									
-									pvt = CreatePivot()
-									PositionEntity(pvt,EntityX(Collider),EntityY(Collider),EntityZ(Collider))
-									
-									PointEntity pvt, e\room\Objects[6]
-									RotateEntity Collider, 0, CurveAngle(EntityYaw(pvt),EntityYaw(Collider),100.0), 0
-									
-									psp\NoMove = True
-									psp\NoRotation = True
-								EndIf
-							ElseIf e\EventState[6] >= 70*5.0 And e\EventState[6] < 70*5.005 Then
-								psp\NoMove = False
-								psp\NoRotation = False
-								CanPlayerUseGuns = True
-								pvt = FreeEntity_Strict(pvt)
-								EndTask(TASK_COME_BACK_TO_GUARD_2)
-								
-								If HUDenabled And psp\IsShowingHUD Then
-									CreateSplashText(GetLocalString("Singleplayer","chapter_4"),opt\GraphicWidth/2,opt\GraphicHeight/2,100,5,Font_Default_Large,True,False)
-								EndIf
-								AddShopPoints(200)
-								cpt\Unlocked = 4
-								
-								ecst\EzDoorOpened = True
-								
-								ecst\WasInHCZ = True
-								ecst\NTFArrived = True
-								ecst\UnlockedHDS = True
-								If (Not TaskExists(TASK_LAUNCH_ROCKET)) Then
-									BeginTask(TASK_LAUNCH_ROCKET)
-								EndIf
-								If (Not TaskExists(TASK_GET_TOPSIDE)) Then
-									BeginTask(TASK_GET_TOPSIDE)
-								EndIf
-							EndIf
-							If e\EventState[6] > 0 And e\EventState[6] < 70*5.0 Then
-								PointEntity pvt, e\room\Objects[6]
-								RotateEntity Collider, 0, CurveAngle(EntityYaw(pvt),EntityYaw(Collider),100.0), 0
-								psp\NoMove = True
-								psp\NoRotation = True
-							EndIf
-						EndIf
-						
-						If cpt\Current < 3 Then
-							
-							If EntityDistanceSquared(e\room\Objects[4], Collider) < PowTwo(1.1) Then ; ~ First encounter with guard.
-								e\EventState[2] = e\EventState[2] + fps\Factor[0]
-								If e\EventState[2] > 0 And e\EventState[2] < 70*0.2 Then
-									If (Not ecst\KilledGuard) Then
-										PlayNewDialogue(7,%01)
-									Else
-										StopChannel(mtfd\CurrentChannel)
+					If (Not ecst\WasInHCZ) Then
+						If EntityDistanceSquared(e\room\Objects[3], Collider) < PowTwo(1.0) Then
+							If (Not TaskExists(TASK_FIND_ROOM3_CT) Lor TaskExists(TASK_FIND_ROOM3_CT_FUSEBOXES)) Then
+								If (Not TaskExists(TASK_FINDWAY_EZDOOR)) And (Not mtfd\IsPlaying) Then
+									If (Not TaskExists(TASK_LAUNCH_ROCKET)) Then
+										PlayNewDialogue(6,%01)
+										BeginTask(TASK_FINDWAY_EZDOOR)
 									EndIf
-								ElseIf e\EventState[2] > 0.0 And e\EventState[2] < 70*15.0 Then
-									BlurTimer = 0
-									psp\NoMove = False
-									psp\NoRotation = True
-									CanPlayerUseGuns% = False
-									
-									For g.Guns = Each Guns
-										If g\ID = g_I\HoldingGun Then
-											PlayGunSound(g\name$+"\holster",1,1,False)
-										EndIf
-									Next
-									g_I\GunChangeFLAG = False
-									g_I\HoldingGun = 0
-									g_I\Weapon_CurrSlot = 0
-									mpl\SlotsDisplayTimer = 0
-									
+								EndIf
+							Else
+								If (Not TaskExists(TASK_FINDWAY_EZDOOR_ALT)) And (Not mtfd\IsPlaying) Then
+									If (Not TaskExists(TASK_LAUNCH_ROCKET)) Then
+										BeginTask(TASK_FINDWAY_EZDOOR_ALT)
+									EndIf
+								EndIf
+							EndIf
+						EndIf
+					EndIf
+				Case HCZ
+					If (Not ecst\WasInO5) Then
+						If e\room\NPC[0] = Null Then
+							de.Decals = CreateDecal(DECAL_BLOODPOOL, EntityX(e\room\Objects[6],True), 0.002, EntityZ(e\room\Objects[6],True),90,Rnd(360),0)
+							de\Size = 0.5
+							e\room\NPC[0] = CreateNPC(NPCTypeWoundedGuard,EntityX(e\room\Objects[6],True),EntityY(e\room\Objects[6],True)+0.2,EntityZ(e\room\Objects[6],True))
+							e\room\NPC[0]\State = 0
+							RotateEntity(e\room\NPC[0]\Collider,0,e\room\angle-45,0)
+						EndIf
+						
+						If ecst\KilledGuard Then
+							CanSave = False
+							e\EventState[8] = e\EventState[8] + fps\Factor[0]
+							If e\EventState[8] > 0 And e\EventState[8] < 70*0.02 Then
+								
+								CreateSplashText(GetLocalString("Singleplayer", "killed_guard"),opt\GraphicWidth/2,opt\GraphicHeight/2,500,2,Font_Menu,True,False)
+								CreateSplashText(GetLocalString("Singleplayer", "killed_guard_2"),opt\GraphicWidth/2,opt\GraphicHeight/2+100,500,2,Font_Menu_Small,True,False)
+								
+							EndIf
+							BlinkTimer = -10
+							Kill()
+							m_msg\DeathTxt = ""
+						EndIf
+						
+						If e\room\NPC[0] <> Null Then
+							If e\room\NPC[0]\HP < 1 Then
+								ecst\KilledGuard = True
+								
+								If TaskExists(TASK_FIND_MEDKIT) Then
+									FailTask(TASK_FIND_MEDKIT)
+								EndIf
+								If TaskExists(TASK_COME_BACK_TO_CORE) Then
+									FailTask(TASK_COME_BACK_TO_CORE)
+								EndIf
+								If TaskExists(TASK_COME_BACK_TO_GUARD) Then
+									FailTask(TASK_COME_BACK_TO_GUARD)
+								EndIf
+								If TaskExists(TASK_COME_BACK_TO_GUARD_2) Then
+									FailTask(TASK_COME_BACK_TO_GUARD_2)
+								EndIf
+							EndIf
+						EndIf
+						
+						Local g.Guns
+						
+						If cpt\Current <> 4 Then
+							
+							If TaskExists(TASK_COME_BACK_TO_GUARD) Then
+								If EntityDistanceSquared(e\room\Objects[5], Collider) < PowTwo(0.3) Then
+									e\EventState[5] = e\EventState[5] + fps\Factor[0]/2
+									If e\EventState[5] <> 0.0 And e\EventState[5] < 70*8.0 Then
+										BlurTimer = 0
+										psp\NoMove = False
+										psp\NoRotation = True
+										CanPlayerUseGuns% = False
+										
+										For g.Guns = Each Guns
+											If g\ID = g_I\HoldingGun Then
+												PlayGunSound(g\name$+"\holster",1,1,False)
+											EndIf
+										Next
+										g_I\GunChangeFLAG = False
+										g_I\HoldingGun = 0
+										g_I\Weapon_CurrSlot = 0
+										mpl\SlotsDisplayTimer = 0
+										
+									EndIf
 								EndIf
 							EndIf
 							
-							If (Not TaskExists(TASK_FIND_MEDKIT)) Then
-								If e\EventState[2] < 70*15.0 Then
-									If EntityDistanceSquared(e\room\Objects[4], Collider) < PowTwo(1.1) Then
+							If TaskExists(TASK_COME_BACK_TO_GUARD) Then
+								
+								If e\EventState[5] > 0 And e\EventState[5] < 70*0.02 Then
+									PlayNewDialogue(9,%01)
+								EndIf
+								
+								If e\EventState[5] < 70*8.0 Then
+									If EntityDistanceSquared(e\room\Objects[5], Collider) < PowTwo(0.3) Then
 										
 										pvt = CreatePivot()
 										PositionEntity(pvt,EntityX(Collider),EntityY(Collider),EntityZ(Collider))
@@ -436,153 +302,283 @@ Function UpdateEvent_Cores(e.Events)
 										psp\NoMove = True
 										psp\NoRotation = True
 									EndIf
-								ElseIf e\EventState[2] >= 70*15.0 And e\EventState[2] < 70*15.01 Then
+								ElseIf e\EventState[5] >= 70*8.0 And e\EventState[5] < 70*8.1 Then
 									psp\NoMove = False
 									psp\NoRotation = False
 									CanPlayerUseGuns% = True
-									FreeEntity_Strict(pvt)
-									
-									If HUDenabled And psp\IsShowingHUD Then
-										CreateSplashText(GetLocalString("Singleplayer","chapter_2"),opt\GraphicWidth/2,opt\GraphicHeight/2,100,5,Font_Default_Large,True,False)
-									EndIf
-									AddShopPoints(200)
-									cpt\Unlocked = 2
+									FreeEntity_Strict pvt
+									EndTask(TASK_COME_BACK_TO_GUARD)
+									BeginTask(TASK_FIND_REACTOR)
 								EndIf
-								If e\EventState[2] > 0 And e\EventState[2] < 70*15.0 Then
+								If e\EventState[5] > 0 And e\EventState[5] < 70*8.0 Then
 									PointEntity pvt, e\room\Objects[6]
 									RotateEntity Collider, 0, CurveAngle(EntityYaw(pvt),EntityYaw(Collider),100.0), 0
 									psp\NoMove = True
 									psp\NoRotation = True
 								EndIf
-								If e\EventState[2] > 70*15.1 And e\EventState[4] = 0 And (Not ChannelPlaying(mtfd\CurrentChannel)) Then
-									BeginTask(TASK_FIND_MEDKIT)
+							EndIf
+							
+							If TaskExists(TASK_COME_BACK_TO_GUARD_2) Then
+								If EntityDistanceSquared(e\room\Objects[5], Collider) < PowTwo(0.3) Then
+									e\EventState[6] = e\EventState[6] + fps\Factor[0]/2
+									If e\EventState[6] <> 0.0 And e\EventState[6] < 70*5.0 Then
+										BlurTimer = 0
+										psp\NoMove = False
+										psp\NoRotation = True
+										CanPlayerUseGuns% = False
+										
+										For g.Guns = Each Guns
+											If g\ID = g_I\HoldingGun Then
+												PlayGunSound(g\name$+"\holster",1,1,False)
+											EndIf
+										Next
+										g_I\GunChangeFLAG = False
+										g_I\HoldingGun = 0
+										g_I\Weapon_CurrSlot = 0
+										mpl\SlotsDisplayTimer = 0
+										
+									EndIf
 								EndIf
 							EndIf
-							If TaskExists(TASK_FIND_MEDKIT) Then
+							
+							If TaskExists(TASK_COME_BACK_TO_GUARD_2) Then
 								
-								If ChannelPlaying(mtfd\CurrentChannel) And e\EventState[3] = 0 Then
-									StopChannel(mtfd\CurrentChannel)
+								If e\EventState[6] > 0 And e\EventState[6] < 70*0.01 Then
+									PlayNewDialogue(10,%01)
 								EndIf
 								
-								Local i
+								If e\EventState[6] < 70*5.0 Then
+									If EntityDistanceSquared(e\room\Objects[5], Collider) < PowTwo(0.3) Then
+										
+										pvt = CreatePivot()
+										PositionEntity(pvt,EntityX(Collider),EntityY(Collider),EntityZ(Collider))
+										
+										PointEntity pvt, e\room\Objects[6]
+										RotateEntity Collider, 0, CurveAngle(EntityYaw(pvt),EntityYaw(Collider),100.0), 0
+										
+										psp\NoMove = True
+										psp\NoRotation = True
+									EndIf
+								ElseIf e\EventState[6] >= 70*5.0 And e\EventState[6] < 70*5.005 Then
+									psp\NoMove = False
+									psp\NoRotation = False
+									CanPlayerUseGuns = True
+									pvt = FreeEntity_Strict(pvt)
+									EndTask(TASK_COME_BACK_TO_GUARD_2)
+									
+									If HUDenabled And psp\IsShowingHUD Then
+										CreateSplashText(GetLocalString("Singleplayer","chapter_4"),opt\GraphicWidth/2,opt\GraphicHeight/2,100,5,Font_Default_Large,True,False)
+									EndIf
+									AddShopPoints(200)
+									cpt\Unlocked = 4
+									
+									ecst\EzDoorOpened = True
+									
+									ecst\WasInHCZ = True
+									ecst\NTFArrived = True
+									ecst\UnlockedHDS = True
+									If (Not TaskExists(TASK_LAUNCH_ROCKET)) Then
+										BeginTask(TASK_LAUNCH_ROCKET)
+									EndIf
+									If (Not TaskExists(TASK_GET_TOPSIDE)) Then
+										BeginTask(TASK_GET_TOPSIDE)
+									EndIf
+								EndIf
+								If e\EventState[6] > 0 And e\EventState[6] < 70*5.0 Then
+									PointEntity pvt, e\room\Objects[6]
+									RotateEntity Collider, 0, CurveAngle(EntityYaw(pvt),EntityYaw(Collider),100.0), 0
+									psp\NoMove = True
+									psp\NoRotation = True
+								EndIf
+							EndIf
+							
+							If cpt\Current < 3 Then
 								
-								If e\EventState[3] <> 1.0 Then
-									If Abs(EntityY(Collider)-EntityY(e\room\Objects[6],True))<1.0 Then
-										If DistanceSquared(EntityX(Collider),EntityX(e\room\Objects[6],True),EntityZ(Collider),EntityZ(e\room\Objects[6],True)) < PowTwo(0.8) Then
-											DrawHandIcon = True
-											If KeyHitUse Then
-												For i = 0 To MaxItemAmount-1
-													If Inventory[i] <> Null Then
-														If Inventory[i]\itemtemplate\tempname = "firstaid" Lor Inventory[i]\itemtemplate\tempname = "firstaid2" Lor Inventory[i]\itemtemplate\tempname = "finefirstaid" Lor Inventory[i]\itemtemplate\tempname = "veryfinefirstaid" Then
-															RemoveItem(Inventory[i])
-															e\EventState[3] = 1.0
-															e\EventState[4] = e\EventState[4] + fps\Factor[0]
-															DrawHandIcon = False
-															If (Not ecst\KilledGuard) Then
-																PlayNewDialogue(8,%01)
-															Else
-																StopChannel(mtfd\CurrentChannel)
+								If EntityDistanceSquared(e\room\Objects[4], Collider) < PowTwo(1.1) Then ; ~ First encounter with guard.
+									e\EventState[2] = e\EventState[2] + fps\Factor[0]
+									If e\EventState[2] > 0 And e\EventState[2] < 70*0.2 Then
+										If (Not ecst\KilledGuard) Then
+											PlayNewDialogue(7,%01)
+										Else
+											StopChannel(mtfd\CurrentChannel)
+										EndIf
+									ElseIf e\EventState[2] > 0.0 And e\EventState[2] < 70*15.0 Then
+										BlurTimer = 0
+										psp\NoMove = False
+										psp\NoRotation = True
+										CanPlayerUseGuns% = False
+										
+										For g.Guns = Each Guns
+											If g\ID = g_I\HoldingGun Then
+												PlayGunSound(g\name$+"\holster",1,1,False)
+											EndIf
+										Next
+										g_I\GunChangeFLAG = False
+										g_I\HoldingGun = 0
+										g_I\Weapon_CurrSlot = 0
+										mpl\SlotsDisplayTimer = 0
+										
+									EndIf
+								EndIf
+								
+								If (Not TaskExists(TASK_FIND_MEDKIT)) Then
+									If e\EventState[2] < 70*15.0 Then
+										If EntityDistanceSquared(e\room\Objects[4], Collider) < PowTwo(1.1) Then
+											
+											pvt = CreatePivot()
+											PositionEntity(pvt,EntityX(Collider),EntityY(Collider),EntityZ(Collider))
+											
+											PointEntity pvt, e\room\Objects[6]
+											RotateEntity Collider, 0, CurveAngle(EntityYaw(pvt),EntityYaw(Collider),100.0), 0
+											
+											psp\NoMove = True
+											psp\NoRotation = True
+										EndIf
+									ElseIf e\EventState[2] >= 70*15.0 And e\EventState[2] < 70*15.01 Then
+										psp\NoMove = False
+										psp\NoRotation = False
+										CanPlayerUseGuns% = True
+										FreeEntity_Strict(pvt)
+										
+										If HUDenabled And psp\IsShowingHUD Then
+											CreateSplashText(GetLocalString("Singleplayer","chapter_2"),opt\GraphicWidth/2,opt\GraphicHeight/2,100,5,Font_Default_Large,True,False)
+										EndIf
+										AddShopPoints(200)
+										cpt\Unlocked = 2
+									EndIf
+									If e\EventState[2] > 0 And e\EventState[2] < 70*15.0 Then
+										PointEntity pvt, e\room\Objects[6]
+										RotateEntity Collider, 0, CurveAngle(EntityYaw(pvt),EntityYaw(Collider),100.0), 0
+										psp\NoMove = True
+										psp\NoRotation = True
+									EndIf
+									If e\EventState[2] > 70*15.1 And e\EventState[4] = 0 And (Not ChannelPlaying(mtfd\CurrentChannel)) Then
+										BeginTask(TASK_FIND_MEDKIT)
+									EndIf
+								EndIf
+								If TaskExists(TASK_FIND_MEDKIT) Then
+									
+									If ChannelPlaying(mtfd\CurrentChannel) And e\EventState[3] = 0 Then
+										StopChannel(mtfd\CurrentChannel)
+									EndIf
+									
+									Local i
+									
+									If e\EventState[3] <> 1.0 Then
+										If Abs(EntityY(Collider)-EntityY(e\room\Objects[6],True))<1.0 Then
+											If DistanceSquared(EntityX(Collider),EntityX(e\room\Objects[6],True),EntityZ(Collider),EntityZ(e\room\Objects[6],True)) < PowTwo(0.8) Then
+												DrawHandIcon = True
+												If KeyHitUse Then
+													For i = 0 To MaxItemAmount-1
+														If Inventory[i] <> Null Then
+															If Inventory[i]\itemtemplate\tempname = "firstaid" Lor Inventory[i]\itemtemplate\tempname = "firstaid2" Lor Inventory[i]\itemtemplate\tempname = "finefirstaid" Lor Inventory[i]\itemtemplate\tempname = "veryfinefirstaid" Then
+																RemoveItem(Inventory[i])
+																e\EventState[3] = 1.0
+																e\EventState[4] = e\EventState[4] + fps\Factor[0]
+																DrawHandIcon = False
+																If (Not ecst\KilledGuard) Then
+																	PlayNewDialogue(8,%01)
+																Else
+																	StopChannel(mtfd\CurrentChannel)
+																EndIf
+																EndTask(TASK_FIND_MEDKIT)
+																psp\NoMove = True
+																psp\NoRotation = True
+																Exit
 															EndIf
-															EndTask(TASK_FIND_MEDKIT)
-															psp\NoMove = True
-															psp\NoRotation = True
-															Exit
 														EndIf
-													EndIf
-												Next
+													Next
+												EndIf
 											EndIf
 										EndIf
 									EndIf
 								EndIf
-							EndIf
-							If e\EventState[3] = 1.0 Then
-								e\EventState[4] = e\EventState[4] + fps\Factor[0]
-							EndIf
-							If e\EventState[4] >= 70*10 And e\EventState[4] < 70*10.1 Then
-								psp\NoMove = False
-								psp\NoRotation = False
-								If (Not TaskExists(TASK_FIND_ROOM3_CT)) Then
-									BeginTask(TASK_FIND_ROOM3_CT)
+								If e\EventState[3] = 1.0 Then
+									e\EventState[4] = e\EventState[4] + fps\Factor[0]
 								EndIf
+								If e\EventState[4] >= 70*10 And e\EventState[4] < 70*10.1 Then
+									psp\NoMove = False
+									psp\NoRotation = False
+									If (Not TaskExists(TASK_FIND_ROOM3_CT)) Then
+										BeginTask(TASK_FIND_ROOM3_CT)
+									EndIf
+								EndIf
+								
 							EndIf
 							
 						EndIf
-						
-					EndIf
-				Else
-					If e\room\NPC[0] <> Null Then
-						RemoveNPC(e\room\NPC[0])
-					EndIf
-				EndIf
-			Case LCZ
-				If PlayerRoom = e\room Then
-					ecst\WasInLCZCore = True
-				EndIf
-				If PlayerRoom = e\room Then
-					If TaskExists(TASK_COME_BACK_TO_CORE) Then
-						EndTask(TASK_COME_BACK_TO_CORE)
-					EndIf
-					If TaskExists(TASK_FINDWAY_START) Lor TaskExists(TASK_FINDWAY_START_KEY) Then
-						CancelTask(TASK_FINDWAY_START)
-						CancelTask(TASK_FINDWAY_START_KEY)
-					EndIf
-					If ecst\WasInRoom2_SL Then
-						If TaskExists(TASK_FIND_ROOM2_SL) Lor TaskExists(TASK_TURN_ON_ROOM2_SL) Then
-							CancelTask(TASK_FIND_ROOM2_SL)
-							CancelTask(TASK_TURN_ON_ROOM2_SL)
+					Else
+						If e\room\NPC[0] <> Null Then
+							RemoveNPC(e\room\NPC[0])
 						EndIf
 					EndIf
-				EndIf
-		End Select
-		
-	ElseIf clm\DMode Then
-		Select gc\CurrZone	
-			Case LCZ
-				If PlayerRoom = e\room Then
-					ecst\WasInLCZCore = True
-				EndIf
-				If PlayerRoom = e\room Then
-					If TaskExists(TASK_COME_BACK_TO_CORE) Then
-						EndTask(TASK_COME_BACK_TO_CORE)
+				Case LCZ
+					If PlayerRoom = e\room Then
+						ecst\WasInLCZCore = True
 					EndIf
-					If TaskExists(TASK_FINDWAY_START) Lor TaskExists(TASK_FINDWAY_START_KEY) Then
-						CancelTask(TASK_FINDWAY_START)
-						CancelTask(TASK_FINDWAY_START_KEY)
-					EndIf
-					If ecst\WasInRoom2_SL Then
-						If TaskExists(TASK_FIND_ROOM2_SL) Lor TaskExists(TASK_TURN_ON_ROOM2_SL) Then
-							CancelTask(TASK_FIND_ROOM2_SL)
-							CancelTask(TASK_TURN_ON_ROOM2_SL)
+					If PlayerRoom = e\room Then
+						If TaskExists(TASK_COME_BACK_TO_CORE) Then
+							EndTask(TASK_COME_BACK_TO_CORE)
+						EndIf
+						If TaskExists(TASK_FINDWAY_START) Lor TaskExists(TASK_FINDWAY_START_KEY) Then
+							CancelTask(TASK_FINDWAY_START)
+							CancelTask(TASK_FINDWAY_START_KEY)
+						EndIf
+						If ecst\WasInRoom2_SL Then
+							If TaskExists(TASK_FIND_ROOM2_SL) Lor TaskExists(TASK_TURN_ON_ROOM2_SL) Then
+								CancelTask(TASK_FIND_ROOM2_SL)
+								CancelTask(TASK_TURN_ON_ROOM2_SL)
+							EndIf
 						EndIf
 					EndIf
-				EndIf
-		End Select
-		
-	Else
-		
-		ecst\UnlockedAirlock = True
-		
-		Select gc\CurrZone
-			Case EZ
-				If TaskExists(TASK_CLASSIC_CORE) Then
+			End Select
+			
+		ElseIf clm\DMode Then
+			Select gc\CurrZone	
+				Case LCZ
 					If PlayerRoom = e\room Then
-						EndTask(TASK_CLASSIC_CORE)						
-						BeginTask(TASK_CLASSIC_GO_TO_ZONE)
+						ecst\WasInLCZCore = True
 					EndIf
-				EndIf
-			Default
-				If TaskExists(TASK_CLASSIC_GO_TO_ZONE) Then
 					If PlayerRoom = e\room Then
-						EndTask(TASK_CLASSIC_GO_TO_ZONE)
+						If TaskExists(TASK_COME_BACK_TO_CORE) Then
+							EndTask(TASK_COME_BACK_TO_CORE)
+						EndIf
+						If TaskExists(TASK_FINDWAY_START) Lor TaskExists(TASK_FINDWAY_START_KEY) Then
+							CancelTask(TASK_FINDWAY_START)
+							CancelTask(TASK_FINDWAY_START_KEY)
+						EndIf
+						If ecst\WasInRoom2_SL Then
+							If TaskExists(TASK_FIND_ROOM2_SL) Lor TaskExists(TASK_TURN_ON_ROOM2_SL) Then
+								CancelTask(TASK_FIND_ROOM2_SL)
+								CancelTask(TASK_TURN_ON_ROOM2_SL)
+							EndIf
+						EndIf
 					EndIf
-				EndIf
-		End Select
+			End Select
+			
+		Else
+			
+			ecst\UnlockedAirlock = True
+			
+			Select gc\CurrZone
+				Case EZ
+					If TaskExists(TASK_CLASSIC_CORE) Then
+						If PlayerRoom = e\room Then
+							EndTask(TASK_CLASSIC_CORE)						
+							BeginTask(TASK_CLASSIC_GO_TO_ZONE)
+						EndIf
+					EndIf
+				Default
+					If TaskExists(TASK_CLASSIC_GO_TO_ZONE) Then
+						If PlayerRoom = e\room Then
+							EndTask(TASK_CLASSIC_GO_TO_ZONE)
+						EndIf
+					EndIf
+			End Select
+			
+		EndIf
 		
-	EndIf
-	
 ;! ~ Actual Core Functionality
-	
-	If PlayerRoom = e\room Then
 		
 		IsZombie = False
 		ForceMove = 0.0
@@ -726,143 +722,139 @@ Function UpdateEvent_Cores(e.Events)
 			End Select
 		EndIf
 		
-		If PlayerRoom = e\room
+		Local zoneStr$
+		
+		If e\room\RoomTemplate\Name = "core_ez" Then
+			zoneStr$ = "_EZ"
+		ElseIf e\room\RoomTemplate\Name = "core_hcz" Then
+			zoneStr$ = "_HCZ"
+		Else
+			zoneStr$ = "_LCZ"
+		EndIf
+		
+		If e\EventState[12] = 0.0
 			
-			Local zoneStr$
+			UpdateButton(e\room\Objects[11])
+			UpdateButton(e\room\Objects[12])
+			UpdateButton(e\room\Objects[13])
 			
-			If e\room\RoomTemplate\Name = "core_ez" Then
-				zoneStr$ = "_EZ"
-			ElseIf e\room\RoomTemplate\Name = "core_hcz" Then
-				zoneStr$ = "_HCZ"
-			Else
-				zoneStr$ = "_LCZ"
-			EndIf
-			
-			If e\EventState[12] = 0.0
-				
-				UpdateButton(e\room\Objects[11])
-				UpdateButton(e\room\Objects[12])
-				UpdateButton(e\room\Objects[13])
-				
-				If d_I\ClosestButton = e\room\Objects[11] Lor d_I\ClosestButton = e\room\Objects[12] Lor d_I\ClosestButton = e\room\Objects[13] Then
-					If KeyHitUse Then
-						If ecst\UnlockedAirlock Then
-							PlaySound_Strict(ButtonSFX[0])
-							e\EventState[12] = 1.0
-							StopChannel e\SoundCHN2
-							e\SoundCHN2 = 0
-							e\room\RoomDoors[1]\locked = False
-							e\room\RoomDoors[2]\locked = False
-							
-							If e\room\RoomDoors[1]\open Then
-								e\EventState[9] = 0
-							EndIf
-							If e\room\RoomDoors[2]\open Then
-								e\EventState[9] = 1
-							EndIf
-							
-							If e\EventState[9] = 0.0 Then
-								UseDoor(e\room\RoomDoors[1])
-							Else
-								UseDoor(e\room\RoomDoors[2])
-							EndIf
-							
-							PlaySound_Strict(AlarmSFX[3])
-						Else
-							PlaySound_Strict(ButtonSFX[0])
-							
-							If gc\CurrZone = LCZ Then
-								If e\EventState[2] = 0 Then
-									If PlayerRoom = e\room Then
-										If (Not TaskExists(TASK_FIND_ROOM2_SL)) Then
-											BeginTask(TASK_FIND_ROOM2_SL)
-										EndIf
-										e\EventState[2] = 1
-									EndIf
-								EndIf
-							EndIf
-							
-							If e\Sound = 0 Then LoadEventSound(e,"SFX\Alarm\Airlock\Decont_Error.ogg")
-							If (Not ChannelPlaying(e\SoundCHN3)) Then e\SoundCHN3 = PlaySound2(e\Sound,Camera,e\room\RoomDoors[2]\obj)
-							e\Sound = 0
-							
-						EndIf
-					EndIf
-				EndIf
-			Else
-				If e\EventState[11] < 70*7
-					e\EventState[11] = e\EventState[11] + fps\Factor[0]
-					e\room\RoomDoors[1]\open = False
-					e\room\RoomDoors[2]\open = False
-					If e\EventState[11] < 70*1
-						
-						
-					ElseIf e\EventState[11] > 70*3 And e\EventState[9] < 70*5.5
-						pvt% = CreatePivot(e\room\obj)								
-						For i = 0 To 3
-							
-							If i = 0
-								PositionEntity pvt%,-96.0,318.0,176.0,False
-							ElseIf i = 1
-								PositionEntity pvt%,96.0,318.0,176.0,False
-							ElseIf i = 2
-								PositionEntity pvt%,-96.0,318.0,-176.0,False
-							Else
-								PositionEntity pvt%,96.0,318.0,-176.0,False
-							EndIf
-							
-							p.Particles = CreateParticle(EntityX(pvt,True), EntityY(pvt,True), EntityZ(pvt,True),  6, 0.6, 0, 50)
-							p\speed = 0.025
-							RotateEntity(p\pvt, 90, 0, 0)
-							
-							p\Achange = -0.02
-						Next
-						
-						FreeEntity pvt
-						If e\SoundCHN2 = 0 Then e\SoundCHN2 = PlaySound2(AirlockSFX[1],Camera,e\room\Objects[10],5)
-					EndIf
-				Else
-					
-					e\EventState[12] = 0.0
-					e\EventState[11] = 0.0
-					e\EventState[10] = 1.0
-					If e\room\RoomDoors[1]\open = False
+			If d_I\ClosestButton = e\room\Objects[11] Lor d_I\ClosestButton = e\room\Objects[12] Lor d_I\ClosestButton = e\room\Objects[13] Then
+				If KeyHitUse Then
+					If ecst\UnlockedAirlock Then
+						PlaySound_Strict(ButtonSFX[0])
+						e\EventState[12] = 1.0
+						StopChannel e\SoundCHN2
+						e\SoundCHN2 = 0
 						e\room\RoomDoors[1]\locked = False
 						e\room\RoomDoors[2]\locked = False
 						
-						If e\EventState[9] = 0.0 Then
-							UseDoor(e\room\RoomDoors[2])
-							If e\Sound = 0 Then LoadEventSound(e,"SFX\Alarm\Airlock\Decont_Core.ogg")
-							If (Not ChannelPlaying(e\SoundCHN3)) Then e\SoundCHN3 = PlaySound2(e\Sound,Camera,e\room\RoomDoors[2]\obj)
-							e\Sound = 0
-						Else
-							UseDoor(e\room\RoomDoors[1])
-							If e\Sound = 0 Then LoadEventSound(e,"SFX\Alarm\Airlock\Decont"+zoneStr+".ogg")
-							If (Not ChannelPlaying(e\SoundCHN3)) Then e\SoundCHN3 = PlaySound2(e\Sound,Camera,e\room\RoomDoors[1]\obj)
-							e\Sound = 0
+						If e\room\RoomDoors[1]\open Then
+							e\EventState[9] = 0
+						EndIf
+						If e\room\RoomDoors[2]\open Then
+							e\EventState[9] = 1
 						EndIf
 						
-						e\EventState[10] = 0.0
+						If e\EventState[9] = 0.0 Then
+							UseDoor(e\room\RoomDoors[1])
+						Else
+							UseDoor(e\room\RoomDoors[2])
+						EndIf
 						
-						UpdateButton(e\room\Objects[11])
-						UpdateButton(e\room\Objects[12])
-						UpdateButton(e\room\Objects[13])
+						PlaySound_Strict(AlarmSFX[3])
+					Else
+						PlaySound_Strict(ButtonSFX[0])
+						
+						If gc\CurrZone = LCZ Then
+							If e\EventState[2] = 0 Then
+								If PlayerRoom = e\room Then
+									If (Not TaskExists(TASK_FIND_ROOM2_SL)) Then
+										BeginTask(TASK_FIND_ROOM2_SL)
+									EndIf
+									e\EventState[2] = 1
+								EndIf
+							EndIf
+						EndIf
+						
+						If e\Sound = 0 Then LoadEventSound(e,"SFX\Alarm\Airlock\Decont_Error.ogg")
+						If (Not ChannelPlaying(e\SoundCHN3)) Then e\SoundCHN3 = PlaySound2(e\Sound,Camera,e\room\RoomDoors[2]\obj)
+						e\Sound = 0
 						
 					EndIf
 				EndIf
 			EndIf
-			
-			If ChannelPlaying(e\SoundCHN2)
-				UpdateSoundOrigin(e\SoundCHN2,Camera,e\room\Objects[10],5)
-			EndIf
 		Else
-			e\EventState[10] = 0.0
+			If e\EventState[11] < 70*7
+				e\EventState[11] = e\EventState[11] + fps\Factor[0]
+				e\room\RoomDoors[1]\open = False
+				e\room\RoomDoors[2]\open = False
+				If e\EventState[11] < 70*1
+					
+					
+				ElseIf e\EventState[11] > 70*3 And e\EventState[9] < 70*5.5
+					pvt% = CreatePivot(e\room\obj)								
+					For i = 0 To 3
+						
+						If i = 0
+							PositionEntity pvt%,-96.0,318.0,176.0,False
+						ElseIf i = 1
+							PositionEntity pvt%,96.0,318.0,176.0,False
+						ElseIf i = 2
+							PositionEntity pvt%,-96.0,318.0,-176.0,False
+						Else
+							PositionEntity pvt%,96.0,318.0,-176.0,False
+						EndIf
+						
+						p.Particles = CreateParticle(EntityX(pvt,True), EntityY(pvt,True), EntityZ(pvt,True),  6, 0.6, 0, 50)
+						p\speed = 0.025
+						RotateEntity(p\pvt, 90, 0, 0)
+						
+						p\Achange = -0.02
+					Next
+					
+					FreeEntity pvt
+					If e\SoundCHN2 = 0 Then e\SoundCHN2 = PlaySound2(AirlockSFX[1],Camera,e\room\Objects[10],5)
+				EndIf
+			Else
+				
+				e\EventState[12] = 0.0
+				e\EventState[11] = 0.0
+				e\EventState[10] = 1.0
+				If e\room\RoomDoors[1]\open = False
+					e\room\RoomDoors[1]\locked = False
+					e\room\RoomDoors[2]\locked = False
+					
+					If e\EventState[9] = 0.0 Then
+						UseDoor(e\room\RoomDoors[2])
+						If e\Sound = 0 Then LoadEventSound(e,"SFX\Alarm\Airlock\Decont_Core.ogg")
+						If (Not ChannelPlaying(e\SoundCHN3)) Then e\SoundCHN3 = PlaySound2(e\Sound,Camera,e\room\RoomDoors[2]\obj)
+						e\Sound = 0
+					Else
+						UseDoor(e\room\RoomDoors[1])
+						If e\Sound = 0 Then LoadEventSound(e,"SFX\Alarm\Airlock\Decont"+zoneStr+".ogg")
+						If (Not ChannelPlaying(e\SoundCHN3)) Then e\SoundCHN3 = PlaySound2(e\Sound,Camera,e\room\RoomDoors[1]\obj)
+						e\Sound = 0
+					EndIf
+					
+					e\EventState[10] = 0.0
+					
+					UpdateButton(e\room\Objects[11])
+					UpdateButton(e\room\Objects[12])
+					UpdateButton(e\room\Objects[13])
+					
+				EndIf
+			EndIf
 		EndIf
-		;EndIf
+		
+		If ChannelPlaying(e\SoundCHN2)
+			UpdateSoundOrigin(e\SoundCHN2,Camera,e\room\Objects[10],5)
+		EndIf
+	Else
+		e\EventState[10] = 0.0
 	EndIf
 	
 ;! ~ End
-	
+
 End Function
 
 ;~IDEal Editor Parameters:

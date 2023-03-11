@@ -173,6 +173,7 @@ Function UpdateEvent_Checkpoints(e.Events)
 						EndIf
 					EndIf
 				EndIf
+				
 		End Select
 		
 		If PlayerRoom = e\room Then
@@ -257,7 +258,7 @@ Function UpdateEvent_Checkpoints(e.Events)
 										cpt\Unlocked = 5
 										If opt\MusicVol > 0 Then
 											If (Not ChannelPlaying(e\SoundCHN)) Then e\SoundCHN = PlaySound_Strict(LoadTempSound("SFX\Music\Misc\Reinforced_Containment_Entrance.ogg"))
-											EndIf
+										EndIf
 										e\EventState[6] = 1
 									EndIf
 								EndIf
@@ -266,14 +267,12 @@ Function UpdateEvent_Checkpoints(e.Events)
 					EndIf
 			End Select
 			
-		EndIf
-		
 		; ~ Actual checkpoint functionality
-		
-		If e\room\Objects[1] <> 0 Then
-			PositionEntity e\room\Objects[1],EntityX(e\room\Objects[1]),-EntityY(e\room\Objects[0]) - (7300 * (gc\CurrZone = BCZ)),EntityZ(e\room\Objects[1])
-		EndIf
-		If e\EventState[1] = 0 And EntityY(Collider) > 2800.0*RoomScale Lor EntityY(Collider) <- 2800.0*RoomScale Then
+			
+			If e\room\Objects[1] <> 0 Then
+				PositionEntity e\room\Objects[1],EntityX(e\room\Objects[1]),-EntityY(e\room\Objects[0]) - (7300 * (gc\CurrZone = BCZ)),EntityZ(e\room\Objects[1])
+			EndIf
+			If e\EventState[1] = 0 And EntityY(Collider) > 2800.0*RoomScale Lor EntityY(Collider) <- 2800.0*RoomScale Then
 				e\EventState[0] = e\EventState[0] + (0.01*fps\Factor[0])
 				EntityAlpha e\room\Objects[2],Min(e\EventState[0],1.0)
 				If e\EventState[0] > 1.05 Then
@@ -377,14 +376,14 @@ Function UpdateEvent_Checkpoints(e.Events)
 					e\EventState[1] = 0
 				EndIf
 			EndIf
-		;EndIf
+		EndIf
 	EndIf
 	
 	Local p.Particles
 	
 	If PlayerRoom = e\room
 		
-		Local zoneStr$
+		Local zoneStr$,pn
 		
 		If e\room\RoomTemplate\Name = "checkpoint_bcz" Then
 			zoneStr$ = "_BCZ"
@@ -400,24 +399,24 @@ Function UpdateEvent_Checkpoints(e.Events)
 				If (Not ecst\WasInBCZ) Then
 					If (Not hds\Wearing) Then
 						If (Not TaskExists(TASK_SEARCH_FOR_HAZMAT)) And wbi\Hazmat Then
-							UpdateButton(e\room\Objects[11])
-							UpdateButton(e\room\Objects[12])
-							UpdateButton(e\room\Objects[13])
+							For pn = 11 To 13
+								UpdateButton(e\room\Objects[pn])
+							Next
 						EndIf
 					Else
-						UpdateButton(e\room\Objects[11])
-						UpdateButton(e\room\Objects[12])
-						UpdateButton(e\room\Objects[13])
+						For pn = 11 To 13
+							UpdateButton(e\room\Objects[pn])
+						Next
 					EndIf
 				Else
-					UpdateButton(e\room\Objects[11])
-					UpdateButton(e\room\Objects[12])
-					UpdateButton(e\room\Objects[13])
+					For pn = 11 To 13
+						UpdateButton(e\room\Objects[pn])
+					Next
 				EndIf 
 			Else
-				UpdateButton(e\room\Objects[11])
-				UpdateButton(e\room\Objects[12])
-				UpdateButton(e\room\Objects[13])
+				For pn = 11 To 13
+					UpdateButton(e\room\Objects[pn])
+				Next
 			EndIf			
 			
 			If d_I\ClosestButton = e\room\Objects[11] Lor d_I\ClosestButton = e\room\Objects[12] Lor d_I\ClosestButton = e\room\Objects[13] Then
@@ -500,9 +499,9 @@ Function UpdateEvent_Checkpoints(e.Events)
 					
 					e\EventState[10] = 0.0
 					
-					UpdateButton(e\room\Objects[11])
-					UpdateButton(e\room\Objects[12])
-					UpdateButton(e\room\Objects[13])
+					For pn = 11 To 13
+						UpdateButton(e\room\Objects[pn])
+					Next
 					
 				EndIf
 			EndIf
