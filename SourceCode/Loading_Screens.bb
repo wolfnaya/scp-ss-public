@@ -1,7 +1,7 @@
 
 Global SelectedLoadingScreen.LoadingScreens, LoadingScreenAmount%, LoadingScreenText%
 
-InitLoadingScreens(I_Loc\LangPath + "Data\loadingscreens.ini")
+InitLoadingScreens(I_Loc\LangPath + "Data\Loadingscreens.ini")
 
 Const LOADINGSCREEN_MAX_IMG% = 3
 Const LOADINGSCREEN_MAX_TXT% = 5

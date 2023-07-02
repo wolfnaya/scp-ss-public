@@ -1059,7 +1059,8 @@ Function UpdateMainMenu()
 					y = y + 35*MenuScale
 					;[End Block]
 				EndIf
-				;[End Block]			Case MenuTab_PointsShop
+				;[End Block]
+			Case MenuTab_PointsShop
 				;[Block]
 				x = 59 * MenuScale
 				y = 286 * MenuScale
@@ -2505,7 +2506,7 @@ Function RenderMainMenu()
 					y = y + 35*MenuScale
 					
 					Color 255,255,255
-					Text(x + 20 * MenuScale, y, GetLocalString("Options","showFPS")+":")
+					Text(x + 20 * MenuScale, y, GetLocalString("Options","showfps")+":")
 					If MouseAndControllerSelectBox(x+375*MenuScale,y-6*MenuScale,20*MenuScale,20*MenuScale,6,MainMenuTab)
 						DrawOptionsTooltip("showfps")
 					EndIf

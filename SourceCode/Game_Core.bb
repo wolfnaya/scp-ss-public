@@ -59,12 +59,6 @@ End Type
 
 Global I_Loc.Loc = New Loc
 
-Type LocalString
-	Field section$
-	Field parameter$
-	Field value$
-End Type
-
 Global Language$ = "English"
 
 Function InitLanguage()
@@ -79,11 +73,7 @@ Function InitLanguage()
 End Function
 
 Function UpdateLang(Lang$)
-	Local l.LocalString
-	
-	If I_Loc\LangPath <> "" Then
-		DeleteINIFile(I_Loc\LangPath + "Data\local.ini")
-	EndIf
+
 	If Lang = "English" Then
 		I_Loc\Lang = ""
 		I_Loc\LangPath = ""
@@ -93,58 +83,45 @@ Function UpdateLang(Lang$)
 		I_Loc\LangPath = "Localization\" + Lang + "\"
 		I_Loc\Localized = True
 	EndIf
-	For l.LocalString = Each LocalString
-		Delete l
-	Next
+
+	IniWriteBuffer(I_Loc\LangPath + "Data\Local.ini")
+	IniWriteBuffer(I_Loc\LangPath + "Data\Achievements.ini")
 	
 	InitFonts()
 	
 End Function
 
+IniWriteBuffer("Data\1499chunks.ini")
+IniWriteBuffer("Data\Achievements.ini")
+IniWriteBuffer("Data\Events.ini")
+IniWriteBuffer("Data\Loadingscreens.ini")
+IniWriteBuffer("Data\Local.ini")
+IniWriteBuffer("Data\Materials.ini")
+IniWriteBuffer("Data\NPCAnims.ini")
+IniWriteBuffer("Data\NPCBones.ini")
+IniWriteBuffer("Data\NPCs.ini")
+IniWriteBuffer("Data\PlayerBones.ini")
+IniWriteBuffer("Data\Rooms.ini")
+IniWriteBuffer("Data\SCP-294.ini")
+IniWriteBuffer("Data\Weapons.ini")
 InitLanguage()
 UpdateLang(Language$)
 
-Function SetLocalString(Section$, Parameter$)
+Function GetLocalString$(Section$, Parameter$)
 	
-	Local l.LocalString = New LocalString
-	l\value = GetLocalString(Section, Parameter)
-	l\section = Section
-	l\parameter = Parameter
+	Return GetFileLocalString("Data\Local.ini", Section, Parameter, Section + "." + Parameter)
 	
 End Function
 
-Function GetLocalString$(Section$, Parameter$)
-	Local l.LocalString
+Function GetFileLocalString$(File$, Section$, Parameter$, DefaultValue$ = "")
 	
-	For l.LocalString = Each LocalString
-		If l\section = Section And l\parameter = Parameter Then
-			Return l\value
-		EndIf
-	Next
-	
-	Local temp$
-	
-	If I_Loc\Localized And FileType(I_Loc\LangPath + "Data\local.ini") = 1 Then
-		temp=GetINIString(I_Loc\LangPath + "Data\local.ini", Section, Parameter)
-		If temp <> "" Then
-			l.LocalString = New LocalString
-            l\section = Section
-            l\parameter = Parameter
-            l\value = temp
-			Return temp
-		EndIf
+	If IniBufferKeyExist(I_Loc\LangPath + File, Section, Parameter) Then
+		Return IniGetBufferString(I_Loc\LangPath + File, Section, Parameter)
+	ElseIf IniBufferKeyExist(File, Section, Parameter)
+		Return IniGetBufferString(File, Section, Parameter)
+	Else
+		Return DefaultValue
 	EndIf
-	
-	temp = GetINIString("Data\Local.ini", Section, Parameter)
-	If temp <> "" Then
-		l.LocalString = New LocalString
-		l\section = Section
-		l\parameter = Parameter
-		l\value = temp
-		Return temp
-	EndIf
-	
-	Return Section + "." + Parameter
 	
 End Function
 
@@ -5643,24 +5620,24 @@ Function Use294()
 					Input294 = Right(Input294, Len(Input294)-9)
 				EndIf
 				
-				If Input294<>""
-					Local loc% = GetINISectionLocation(Data294, Input294)
+				If Input294 <> ""
+					Local drink$ = FindSCP294Drink(Input294)
 				EndIf
 				
-				If loc > 0 Then
-					strtemp$ = GetINIString2(Data294, loc, "dispensesound")
+				If drink <> "Null" Then
+					strtemp$ = GetFileLocalString(Data294, drink, "dispensesound")
 					If strtemp="" Then
 						PlayerRoom\SoundCHN = PlaySound_Strict (LoadTempSound("SFX\SCP\294\dispense1.ogg"))
 					Else
 						PlayerRoom\SoundCHN = PlaySound_Strict (LoadTempSound(strtemp))
 					EndIf
 					
-					If GetINIInt2(Data294, loc, "explosion")=True Then 
+					If Integer(GetFileLocalString(Data294, drink, "explosion")) Then 
 						ExplosionTimer = 135
-						m_msg\DeathTxt = GetINIString2(Data294, loc, "deathmessage")
+						m_msg\DeathTxt = GetFileLocalString(Data294, drink, "deathmessage")
 					EndIf
 					
-					strtemp$ = GetINIString2(Data294, loc, "color")
+					strtemp$ = GetFileLocalString(Data294, drink, "color")
 					
 					Local sep1 = Instr(strtemp, ",", 1)
 					Local sep2 = Instr(strtemp, ",", sep1+1)
@@ -5668,13 +5645,13 @@ Function Use294()
 					Local g% = Trim(Mid(strtemp, sep1+1, sep2-sep1-1))
 					Local b% = Trim(Right(strtemp, Len(strtemp)-sep2))
 					
-					Local alpha# = Float(GetINIString2(Data294, loc, "alpha",1.0))
-					Local glow = GetINIInt2(Data294, loc, "glow")
+					Local alpha# = Float(GetFileLocalString(Data294, drink, "alpha",1.0))
+					Local glow = Integer(GetFileLocalString(Data294, drink, "glow"))
 					If glow Then alpha = -alpha
 					
 					Local it.Items
 					it.Items = CreateItem("Cup", "cup", EntityX(PlayerRoom\Objects[1],True),EntityY(PlayerRoom\Objects[1],True),EntityZ(PlayerRoom\Objects[1],True), r,g,b,alpha)
-					it\name = "Cup of "+Input294
+					it\name = "Cup of " + Input294
 					EntityType (it\collider, HIT_ITEM)
 					
 				Else

@@ -1814,10 +1814,9 @@ Function UpdateGUI()
 							x2 = (SelectedItem\state+1.0)
 							
 							Local iniStr$ = Data294
-							
-							Local loc% = GetINISectionLocation(iniStr, SelectedItem\name)
-							
-							StrTemp = GetINIString2(iniStr, loc, "message")
+							Local drink$ = FindSCP294Drink(SelectedItem\name)
+
+							StrTemp = GetFileLocalString(iniStr, drink, "message")
 							
 							If IsVaneCoinDropped Then
 								CreateMsg("DAMN, THAT SOUNDS NICE!",70*10,True,Rand(100,255),Rand(100,255),Rand(100,255))
@@ -1831,33 +1830,33 @@ Function UpdateGUI()
 								EndIf
 							EndIf
 							
-							If GetINIInt2(iniStr, loc, "lethal") Lor GetINIInt2(iniStr, loc, "deathtimer") Then 
-								m_msg\DeathTxt = GetINIString2(iniStr, loc, "deathmessage")
-								If GetINIInt2(iniStr, loc, "lethal") Then Kill()
+							If Integer(GetFileLocalString(iniStr, drink, "lethal")) Lor Integer(GetFileLocalString(iniStr, drink, "deathtimer")) Then 
+								m_msg\DeathTxt = GetFileLocalString(iniStr, drink, "deathmessage")
+								If Integer(GetFileLocalString(iniStr, drink, "lethal")) Then Kill()
 							EndIf
-							BlurTimer = GetINIInt2(iniStr, loc, "blur")*70
-							If VomitTimer = 0 Then VomitTimer = GetINIInt2(iniStr, loc, "vomit")
-							CameraShakeTimer = GetINIString2(iniStr, loc, "camerashake")
-							DamageSPPlayer(GetINIInt2(iniStr, loc, "damage") * 25.0, True)
-							StrTemp =  GetINIString2(iniStr, loc, "sound")
+							BlurTimer = Integer(GetFileLocalString(iniStr, drink, "blur"))*70
+							If VomitTimer = 0 Then VomitTimer = Integer(GetFileLocalString(iniStr, drink, "vomit"))
+							CameraShakeTimer = GetFileLocalString(iniStr, drink, "camerashake")
+							DamageSPPlayer(Integer(GetFileLocalString(iniStr, drink, "damage")) * 25.0, True)
+							StrTemp =  GetFileLocalString(iniStr, drink, "sound")
 							If StrTemp<>"" Then
 								PlaySound_Strict LoadTempSound(StrTemp)
 							EndIf
-							If GetINIInt2(iniStr, loc, "stomachache") Then I_1025\State[3]=1
+							If Integer(GetFileLocalString(iniStr, drink, "stomachache")) Then I_1025\State[3]=1
 							
-							DeathTimer=GetINIInt2(iniStr, loc, "deathtimer")*70
+							DeathTimer = Integer(GetFileLocalString(iniStr, drink, "deathtimer"))*70
 							
-							If GetINIInt2(iniStr, loc, "cola") Then I_207\Factor = 1
+							If Integer(GetFileLocalString(iniStr, drink, "cola")) Then I_207\Factor = 1
 							
-							I_1079\Foam = Max(I_1079\Foam + GetINIInt2(iniStr, loc, "bubble foam"),0)
+							I_1079\Foam = Max(I_1079\Foam + Integer(GetFileLocalString(iniStr, drink, "bubble foam")),0)
 							
-							BlinkEffect = Float(GetINIString2(iniStr, loc, "blink effect", 1.0))*x2
-							BlinkEffectTimer = Float(GetINIString2(iniStr, loc, "blink effect timer", 1.0))*x2
+							BlinkEffect = Float(GetFileLocalString(iniStr, drink, "blink effect", 1.0))*x2
+							BlinkEffectTimer = Float(GetFileLocalString(iniStr, drink, "blink effect timer", 1.0))*x2
 							
-							StaminaEffect = Float(GetINIString2(iniStr, loc, "stamina effect", 1.0))*x2
-							StaminaEffectTimer = Float(GetINIString2(iniStr, loc, "stamina effect timer", 1.0))*x2
+							StaminaEffect = Float(GetFileLocalString(iniStr, drink, "stamina effect", 1.0))*x2
+							StaminaEffectTimer = Float(GetFileLocalString(iniStr, drink, "stamina effect timer", 1.0))*x2
 							
-							StrTemp = GetINIString2(iniStr, loc, "refusemessage")
+							StrTemp = GetFileLocalString(iniStr, drink, "refusemessage")
 							If StrTemp <> "" Then
 								CreateMsg(StrTemp)
 							Else
