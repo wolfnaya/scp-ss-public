@@ -580,8 +580,6 @@ Function NullMPGame(nomenuload%=False,playbuttonsfx%=True)
 		Disconnect()
 	EndIf
 	
-	DeleteINIFile(gv\WeaponFile)
-	
 	If (Not nomenuload) Lor mp_I\PlayState = GAME_CLIENT Then
 		Local SelGamemode$ = mp_O\Gamemode\name
 		Local mgm.MultiplayerGameMode

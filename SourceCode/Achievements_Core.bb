@@ -25,11 +25,10 @@ Const Achv402% = 45,AchvVane% = 46,Achv076% = 47,AchvGungame% = 48,AchvEMRP% = 4
 Const Achv1102RU% = 56
 
 For i = 0 To MAXACHIEVEMENTS-1
-	Local Loc2% = GetINISectionLocation(AchvIni, "s"+Str(i))
-	achv\AchievementStrings[i] = GetINIString2(AchvIni, Loc2, "AchvName")
-	achv\AchievementDescs[i] = GetINIString2(AchvIni, Loc2, "AchvDesc")
+	achv\AchievementStrings[i] = GetFileLocalString(AchvIni, "s" + Str(i), "AchvName")
+	achv\AchievementDescs[i] = GetFileLocalString(AchvIni, "s" + Str(i), "AchvDesc")
 	
-	Local Image$ = GetINIString2(AchvIni, Loc2, "AchvImage") 
+	Local Image$ = GetFileLocalString(AchvIni, "s" + Str(i), "AchvImage") 
 	
 	achv\AchvIMG[i] = LoadImage_Strict("GFX\achievements\"+Image+".png")
 	achv\AchvIMG[i] = ResizeImage2(achv\AchvIMG[i],ImageWidth(achv\AchvIMG[i])*opt\GraphicHeight/768.0,ImageHeight(achv\AchvIMG[i])*opt\GraphicHeight/768.0)
@@ -40,8 +39,7 @@ achv\AchvLocked = ResizeImage2(achv\AchvLocked,ImageWidth(achv\AchvLocked)*opt\G
 Function GiveAchievement%(AchvName%, ShowMessage% = True)
 	If achv\Achievement[AchvName] <> True Then
 		achv\Achievement[AchvName] = True
-		Local Loc2% = GetINISectionLocation(AchvIni, "s" + AchvName)
-		Local AchievementName$ = GetINIString2(AchvIni, Loc2, "AchvName")
+		Local AchievementName$ = GetFileLocalString(AchvIni, "s" + AchvName, "AchvName")
 		
 		CreateAchievementMsg(AchvName, AchievementName)
 	EndIf

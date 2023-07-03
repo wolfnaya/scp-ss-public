@@ -1601,15 +1601,14 @@ Function ReloadAll()
 	Next
 	
 	For i = 0 To MAXACHIEVEMENTS-1
-		Local loc2% = GetINISectionLocation(AchvIni, "s"+Str(i))
-		Local image$ = GetINIString2(AchvIni, loc2, "AchvImage") 
-		achv\AchvIMG[i] = LoadImage_Strict("GFX\achievements\"+image+".png")
+		Local image$ = GetFileLocalString(AchvIni, "s" + Str(i), "AchvImage") 
+		achv\AchvIMG[i] = LoadImage_Strict("GFX\achievements\" + image + ".png")
 		achv\AchvIMG[i] = ResizeImage2(achv\AchvIMG[i],ImageWidth(achv\AchvIMG[i])*opt\GraphicHeight/768.0,ImageHeight(achv\AchvIMG[i])*opt\GraphicHeight/768.0)
 	Next
 	achv\AchvLocked = LoadImage_Strict("GFX\achievements\achvlocked.png")
 	achv\AchvLocked = ResizeImage2(achv\AchvLocked,ImageWidth(achv\AchvLocked)*opt\GraphicHeight/768.0,ImageHeight(achv\AchvLocked)*opt\GraphicHeight/768.0)
 	
-	InitLoadingScreens("Data\loadingscreens.ini")
+	InitLoadingScreens("Data\Loadingscreens.ini")
 	Load3DMenu(name)
 	MusicCHN% = StreamSound_Strict("SFX\Music\"+Music[NowPlaying]+".ogg",CurrMusicVolume,Mode)
 	
